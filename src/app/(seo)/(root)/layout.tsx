@@ -3,15 +3,23 @@
 import classes from "@/app/Demo.module.css";
 import { globalHotKeys } from "@/components/globalHotKeys";
 import PrositContext from "@/components/prositContext";
-import { todocx } from "@/components/todocx";
+import {
+	DEFAULT_EXPORT_FORMAT,
+	EXPORT_FORMAT_STORAGE_KEY,
+	todocx,
+	type ExportFormat,
+} from "@/components/todocx";
 import useNavigator from "@/hooks/useNavigator";
 import { AnchorsKeys, AnchorsLabels } from "@/types/anchors";
 import {
 	AppShell,
+	ActionIcon,
 	Burger,
+	Group,
 	Button,
 	Kbd,
 	Modal,
+	Menu,
 	NavLink,
 	Text,
 	Title,
@@ -25,6 +33,7 @@ import {
 	AreaChart,
 	ArrowLeft,
 	ArrowRight,
+	ChevronDown,
 	HelpCircle,
 	Info,
 	KeyRound,
@@ -47,6 +56,8 @@ export default function FormLayout({
 	const [modalopened, { open, close }] = useDisclosure(false);
 	const pathname = usePathname();
 	const { prosit, setProsit, clearProsit } = useContext(PrositContext);
+	const [exportFormat, setExportFormat] = useState<ExportFormat>(DEFAULT_EXPORT_FORMAT);
+	const [isExportFormatReady, setIsExportFormatReady] = useState(false);
 	const { navigate, setAnchor, next, previous, nextAnchor, previousAnchor } =
 		useNavigator({
 			prosit,
@@ -60,10 +71,23 @@ export default function FormLayout({
 
 	useHotkeys([
 		["f1", () => toggle()],
-		["ctrl+s", () => todocx(prosit)],
+		["ctrl+s", () => todocx(prosit, exportFormat)],
 		["ctrl+alt+l", () => toggleColorScheme()],
 		...globalHotKeys(navigate),
 	]);
+
+	useEffect(() => {
+		const storedFormat = localStorage.getItem(EXPORT_FORMAT_STORAGE_KEY);
+		if (storedFormat === "pdf" || storedFormat === "docx") {
+			setExportFormat(storedFormat);
+		}
+		setIsExportFormatReady(true);
+	}, []);
+
+	useEffect(() => {
+		if (!isExportFormatReady) return;
+		localStorage.setItem(EXPORT_FORMAT_STORAGE_KEY, exportFormat);
+	}, [exportFormat, isExportFormatReady]);
 
 	return (
 		<div>
@@ -182,9 +206,37 @@ export default function FormLayout({
 
 					<div className="flex flex-col gap-3">
 						<div className="flex gap-3">
-							<Button fullWidth color="green" onClick={() => todocx(prosit)}>
-								Exporter en .docx
-							</Button>
+							<Group gap={0} className="w-full" align="stretch" wrap="nowrap">
+								<Button
+									color="green"
+									style={{ flex: 1, borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
+									onClick={() => todocx(prosit, exportFormat)}
+								>
+									Exporter en .{isExportFormatReady ? exportFormat : DEFAULT_EXPORT_FORMAT}
+								</Button>
+								<Menu position="bottom-end" withinPortal>
+									<Menu.Target>
+										<ActionIcon
+											color="green"
+											variant="filled"
+											aria-label="Choisir le format d'export"
+											h={36}
+											style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0, left: 0, flex: 1}}
+										>
+											<ChevronDown size={16} />
+										</ActionIcon>
+									</Menu.Target>
+									<Menu.Dropdown>
+										<Menu.Label>Format par défaut</Menu.Label>
+										<Menu.Item onClick={() => setExportFormat("docx")}>
+											Exporter en .docx
+										</Menu.Item>
+										<Menu.Item onClick={() => setExportFormat("pdf")}>
+											Exporter en .pdf
+										</Menu.Item>
+									</Menu.Dropdown>
+								</Menu>
+							</Group>
 							<Tooltip bg="blue" c="white" label="Ouvrir la présentation">
 								<Button
 									color="blue"
@@ -353,7 +405,7 @@ export default function FormLayout({
 							<div>
 								<Kbd>ctrl</Kbd> + <Kbd>s</Kbd>
 							</div>
-							pour exporter en .docx
+							pour exporter selon le format par défaut
 						</div>
 					</div>
 					<div>
