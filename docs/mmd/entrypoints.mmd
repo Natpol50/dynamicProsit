@@ -1,0 +1,12 @@
+flowchart LR
+  subgraph Entrypoints
+    A[Next.js App] --> B["src/app/(seo)/layout.tsx"]
+    B --> C["src/app/(seo)/(root)/page.tsx"]
+    B --> D["src/app/(seo)/presentation/page.tsx"]
+    A --> E[next.config.js]
+    A --> F[src-tauri/src/main.rs]
+  end
+
+  C --> |"form pages"| Forms["Form steps under (root)"]
+  D --> |"presentation"| Presentation["Presentation page"]
+  F --> |"desktop runtime"| Tauri[Tauri runtime]

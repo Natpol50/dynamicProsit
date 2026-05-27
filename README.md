@@ -3,6 +3,8 @@
 
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
+Pour une vue d'ensemble plus complete de l'application, consulte [la documentation d'architecture](docs/architecture.md).
+
 ## Getting Started
 
 First, run the development server:

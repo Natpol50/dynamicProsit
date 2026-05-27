@@ -1,0 +1,16 @@
+flowchart TD
+  subgraph Composants
+    A[editableItem.tsx]
+    B[editableItemList.tsx]
+    C[sortableItem.tsx]
+    D[windowsHeader.tsx]
+    E[todocx.ts]
+    F[globalHotKeys.ts]
+  end
+
+  A --> B
+  B --> C
+  F --> A
+  F --> B
+  E --> A
+  D --> F

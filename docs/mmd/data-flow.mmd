@@ -1,0 +1,8 @@
+flowchart TD
+  User[Utilisateur] --> Form[Formulaire]
+  Form --> PrositContext[PrositContext]
+  PrositContext --> Local[localStorage]
+  PrositContext --> Presentation[Presentation view]
+  PrositContext --> Export[Export DOCX]
+  Presentation --> TauriWindow[Tauri WebviewWindow]
+  Export --> File[Download DOCX]

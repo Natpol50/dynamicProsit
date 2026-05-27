@@ -1,0 +1,34 @@
+flowchart TD
+  subgraph repo [Repository root]
+    A[biome.json]
+    B[package.json]
+    C[tsconfig.json]
+    D[public/]
+    E[src/]
+    F[docs/]
+  end
+
+  subgraph src
+    S_app[src/app]
+    S_components[src/components]
+    S_hooks[src/hooks]
+    S_types[src/types]
+    S_utils[src/utils]
+    S_tauri[src-tauri]
+  end
+
+  repo --> src
+  repo --> public
+  repo --> docs
+  src --> S_app
+  src --> S_components
+  src --> S_hooks
+  src --> S_types
+  src --> S_utils
+  src --> S_tauri
+
+  S_app --> |"routes & layouts"| L["app/(seo)/"]
+  S_components --> |"UI pieces"| Cmp[components]
+  S_hooks --> |"logic"| Hks[hooks]
+  S_types --> |"data model"| T[types]
+  S_tauri --> |"desktop bridge"| Tauri[src-tauri]

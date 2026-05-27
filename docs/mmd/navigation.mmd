@@ -1,0 +1,6 @@
+flowchart TD
+  Anchors[Anchors] -->|map| Routes["Next.js routes"]
+  Routes --> PageForms["Form pages"]
+  PageForms -->|useNavigator| Router["router.push(...)"]
+  Router --> PrositContext
+  PrositContext --> UI["Current UI state"]

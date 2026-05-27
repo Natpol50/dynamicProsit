@@ -1,0 +1,7 @@
+flowchart TD
+  Browser[Browser] --> App[Next.js App]
+  TauriRuntime[Tauri] --> App
+  TauriRuntime --> Webview[Presentation WebviewWindow]
+  Webview --> Presentation[Presentation page]
+  App --> LocalStorage[localStorage]
+  TauriRuntime --> Shell["@tauri-apps/api/shell"]
