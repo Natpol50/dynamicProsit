@@ -3,12 +3,15 @@ import Docxtemplater from "docxtemplater";
 import { saveAs } from "file-saver";
 import PizZip from "pizzip";
 
+
 export type ExportFormat = "docx" | "pdf";
+
 
 export const DEFAULT_EXPORT_FORMAT: ExportFormat = "docx";
 export const EXPORT_FORMAT_STORAGE_KEY = "prosit-export-format";
 
 // biome-ignore lint/suspicious/noExplicitAny: any is required for dynamic import
+
 let PizZipUtils: any = null;
 if (typeof window !== "undefined") {
 	import("pizzip/utils/index.js").then((r) => {
@@ -49,6 +52,7 @@ const buildExportValues = (prosit: Prosit) => ({
 	planDAction: prosit.planDAction.map((etape) => etape.content.trim()),
 });
 
+
 const escapeHtml = (value: string) =>
 	value
 		.replaceAll("&", "&amp;")
@@ -56,6 +60,13 @@ const escapeHtml = (value: string) =>
 		.replaceAll(">", "&gt;")
 		.replaceAll('"', "&quot;")
 		.replaceAll("'", "&#39;");
+
+
+const formatDateTime = (date: Date) =>
+	new Intl.DateTimeFormat("fr-FR", {
+		dateStyle: "long",
+		timeStyle: "short",
+	}).format(date);
 
 const renderListSection = (title: string, items: string[]) => {
 	const content =
@@ -70,6 +81,22 @@ const renderListSection = (title: string, items: string[]) => {
 		</section>
 	`;
 };
+
+const loadTextFile = async (url: string) => {
+	const response = await fetch(url, { cache: "no-store" });
+	if (!response.ok) {
+		throw new Error(`Unable to load template: ${url}`);
+	}
+
+	return response.text();
+};
+
+const fillTemplate = (template: string, values: Record<string, string>) =>
+	Object.entries(values).reduce(
+		(currentTemplate, [key, value]) =>
+			currentTemplate.replaceAll(`{{${key}}}`, value),
+		template,
+	);
 
 const exportDocx = (prosit: Prosit) => {
 	loadFile("/template.docx", (error, content) => {
@@ -95,6 +122,29 @@ const exportPdf = async (prosit: Prosit) => {
 	if (typeof window === "undefined" || typeof document === "undefined") return;
 
 	const values = buildExportValues(prosit);
+	const instanceUrl = window.location.href;
+	const instanceOrigin = window.location.origin;
+	const generatedAt = formatDateTime(new Date());
+	const template = await loadTextFile("/template-pdf.html");
+	const sections = [
+		renderListSection("Généralisation", values.generalisation ? [values.generalisation] : []),
+		renderListSection("Mots clefs", values.motsCles),
+		renderListSection("Contraintes", values.contraintes),
+		renderListSection("Problématiques", values.problematiques),
+		renderListSection("Pistes de solution", values.pistesDeSolutions),
+		renderListSection("Livrables", values.livrables),
+		renderListSection("Plan d'action", values.planDAction),
+	].join("");
+	const html = fillTemplate(template, {
+		title: `PA-${sanitizeFilename(values.titre)} - ${instanceOrigin}`,
+		titleText: values.titre,
+		instanceUrl: escapeHtml(instanceUrl),
+		instanceOrigin: escapeHtml(instanceOrigin),
+		generatedAt: escapeHtml(generatedAt),
+		lien: escapeHtml(values.lien || "—"),
+		contexte: escapeHtml(values.contexte || "—"),
+		sections,
+	});
 	const iframe = document.createElement("iframe");
 	iframe.style.position = "fixed";
 	iframe.style.right = "0";
@@ -104,64 +154,6 @@ const exportPdf = async (prosit: Prosit) => {
 	iframe.style.border = "0";
 	iframe.style.visibility = "hidden";
 	iframe.setAttribute("aria-hidden", "true");
-
-	const html = `
-		<!doctype html>
-		<html lang="fr">
-			<head>
-				<meta charset="utf-8" />
-				<meta name="viewport" content="width=device-width, initial-scale=1" />
-				<title>PA-${escapeHtml(sanitizeFilename(values.titre))}</title>
-				<style>
-					@page { size: A4; margin: 18mm; }
-					* { box-sizing: border-box; }
-					body {
-						font-family: Arial, Helvetica, sans-serif;
-						color: #111827;
-						margin: 0;
-						padding: 0;
-						line-height: 1.45;
-					}
-					main { max-width: 800px; margin: 0 auto; }
-					h1 { font-size: 26px; margin: 0 0 8px; }
-					.meta { margin: 0 0 18px; font-size: 12px; color: #374151; }
-					.section { margin: 0 0 16px; page-break-inside: avoid; }
-					h2 { font-size: 15px; margin: 0 0 6px; padding-bottom: 4px; border-bottom: 1px solid #d1d5db; }
-					ul { margin: 0; padding-left: 18px; }
-					li { margin: 0 0 4px; }
-					li.empty { list-style: none; padding-left: 0; color: #6b7280; }
-					@media screen {
-						body { padding: 18px; }
-					}
-				</style>
-			</head>
-			<body>
-				<main>
-					<h1>Prosit: ${escapeHtml(values.titre)}</h1>
-					<p class="meta">
-						Lien: ${escapeHtml(values.lien)}<br />
-						Contexte: ${escapeHtml(values.contexte)}<br />
-						Généralisation: ${escapeHtml(values.generalisation)}<br />
-						Rôles: animateur ${escapeHtml(values.animateur)} | secrétaire ${escapeHtml(values.secretaire)} | gestionnaire ${escapeHtml(values.gestionnaire)} | scribe ${escapeHtml(values.scribe)}
-					</p>
-					${renderListSection("Mots clefs", values.motsCles)}
-					${renderListSection("Contraintes", values.contraintes)}
-					${renderListSection("Problématiques", values.problematiques)}
-					${renderListSection("Pistes de solution", values.pistesDeSolutions)}
-					${renderListSection("Livrables", values.livrables)}
-					${renderListSection("Plan d'action", values.planDAction)}
-				</main>
-				<script>
-					window.addEventListener('load', () => {
-						window.focus();
-						window.print();
-					});
-					window.addEventListener('afterprint', () => window.close());
-				</script>
-			</body>
-		</html>
-	`;
-
 	iframe.srcdoc = html;
 	iframe.onload = () => {
 		const iframeWindow = iframe.contentWindow;

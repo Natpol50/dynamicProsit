@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="fr">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{{title}}</title>
+		<style>
+			@page { size: A4; margin: 0; }
+			* { box-sizing: border-box; }
+			:root {
+				--ink: #0f172a;
+				--muted: #475569;
+				--line: rgba(59, 130, 246, 0.18);
+				--line-strong: rgba(59, 130, 246, 0.28);
+				--surface: rgba(255, 255, 255, 0.94);
+			}
+			body {
+				font-family: Inter, Arial, Helvetica, sans-serif;
+				color: var(--ink);
+				margin: 0;
+				padding: 0;
+				line-height: 1.5;
+				-webkit-print-color-adjust: exact;
+				print-color-adjust: exact;
+				background:
+					radial-gradient(circle at top left, rgba(59, 130, 246, 0.15), transparent 35%),
+					linear-gradient(180deg, #eff6ff 0%, #ffffff 22%, #ffffff 100%);
+			}
+			.page {
+				width: 210mm;
+				min-height: 297mm;
+				margin: 0 auto;
+				padding: 14mm 16mm 16mm;
+				position: relative;
+			}
+			.sheet {
+				background: var(--surface);
+				border: 1px solid var(--line);
+				border-radius: 20px;
+				padding: 18px 18px 16px;
+				box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+				overflow: hidden;
+				position: relative;
+			}
+			.sheet::before {
+				content: "";
+				position: absolute;
+				inset: 0 0 auto 0;
+				height: 8px;
+				background: linear-gradient(90deg, rgba(37, 99, 235, 0.18), rgba(59, 130, 246, 0.45), rgba(96, 165, 250, 0.12));
+			}
+			headerspace { display: block; height: 8px; }
+			.hero {
+				display: flex;
+				flex-direction: column;
+				gap: 10px;
+				padding: 18px 18px 16px;
+				border-radius: 18px;
+				background: linear-gradient(135deg, rgba(59, 130, 246, 0.22), rgba(59, 130, 246, 0.08));
+				border: 1px solid var(--line-strong);
+				margin-bottom: 15px;
+				padding-top: 22px;
+			}
+			.kicker {
+				display: inline-flex;
+				align-self: flex-start;
+				padding: 6px 10px;
+				border-radius: 999px;
+				background: rgba(255, 255, 255, 0.65);
+				border: 1px solid rgba(59, 130, 246, 0.22);
+				font-size: 11px;
+				font-weight: 700;
+				letter-spacing: 0.04em;
+				text-transform: uppercase;
+				color: #1d4ed8;
+			}
+			h1 {
+				font-size: 28px;
+				line-height: 1.1;
+				margin: 0;
+			}
+			.hero-grid {
+				display: grid;
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+				gap: 8px;
+			}
+			.metric {
+				padding: 10px 12px;
+				border-radius: 14px;
+				background: rgba(255, 255, 255, 0.72);
+				border: 1px solid rgba(59, 130, 246, 0.14);
+				font-size: 12px;
+				color: var(--muted);
+			}
+			.metric strong { display: block; color: var(--ink); font-size: 13px; margin-bottom: 3px; }
+			.section { margin: 0 0 12px; page-break-inside: avoid; }
+			h2 {
+				font-size: 15px;
+				margin: 0 0 7px;
+				padding: 0 0 6px;
+				border-bottom: 1px solid var(--line);
+			}
+			ul { margin: 0; padding-left: 18px; }
+			li { margin: 0 0 4px; }
+			li.empty { list-style: none; padding-left: 0; color: #64748b; }
+			.footer {
+				margin-top: 12px;
+				padding-top: 10px;
+				border-top: 1px solid var(--line);
+				font-size: 11px;
+				color: #64748b;
+				display: flex;
+				justify-content: space-between;
+				gap: 12px;
+				flex-wrap: wrap;
+			}
+			@media screen {
+				body { padding: 18px; }
+				.page { filter: drop-shadow(0 24px 70px rgba(15, 23, 42, 0.08)); }
+			}
+			@media print {
+				body { background: #ffffff; }
+				.page { padding: 0; width: auto; min-height: auto; }
+				.sheet { box-shadow: none; border-radius: 0; }
+				.sheet::before { display: none; }
+			}
+		</style>
+	</head>
+	<body>
+		<div class="page">
+			<main class="sheet">
+				<header class="hero">
+					<span class="kicker">DynamicProsit • Export PDF</span>
+					<h1>{{titleText}}</h1>
+					<div class="hero-grid">
+						<div class="metric"><strong>Instance</strong>{{instanceUrl}}</div>
+						<div class="metric"><strong>Généré le</strong>{{generatedAt}}</div>
+						<div class="metric"><strong>Lien</strong>{{lien}}</div>
+						<div class="metric"><strong>Contexte</strong>{{contexte}}</div>
+					</div>
+				</header>
+				{{sections}}
+				<footer class="footer">
+					<span>Export généré depuis {{instanceOrigin}}</span>
+					<span>Format PDF web • aperçu imprimable</span>
+				</footer>
+			</main>
+		</div>
+		<script>
+			window.addEventListener('load', () => {
+				window.focus();
+				window.print();
+			});
+			window.addEventListener('afterprint', () => window.close());
+		</script>
+	</body>
+</html>
